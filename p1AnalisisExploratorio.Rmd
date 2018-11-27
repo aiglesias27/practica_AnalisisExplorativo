@@ -1,0 +1,49 @@
+---
+title: "p1AnalisisExploratorio"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+Primera practiva voluntaria de Análisis Exploratorio R.
+```{r}
+
+if (!file.exists("./datos")){
+  dir.create("./datos")
+}
+fileURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00320/student.zip"
+path <- getwd()
+file <- paste0(path,"/datos/student.zip")
+download.file(fileURL,file,method="curl")
+unzip("./datos/student.zip", exdir="./datos") 
+list.files("./datos")
+```
+```{r}
+path <- getwd()
+pathTable1 <- paste0(path,"/datos/student-mat.csv")
+pathTable2 <- paste0(path,"/datos/student-por.csv")
+d1=read.table(pathTable1 , sep=";",header=TRUE)
+d2=read.table(pathTable2 , sep=";",header=TRUE)
+
+d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
+print(nrow(d3)) # 382 students
+```
+
+
+
+
+
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
