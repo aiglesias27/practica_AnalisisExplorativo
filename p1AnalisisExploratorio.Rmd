@@ -10,7 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 Primera practiva voluntaria de Análisis Exploratorio R.
-```{r}
+```{r file, include=FALSE, }
 
 if (!file.exists("./datos")){
   dir.create("./datos")
@@ -22,7 +22,7 @@ download.file(fileURL,file,method="curl")
 unzip("./datos/student.zip", exdir="./datos") 
 list.files("./datos")
 ```
-```{r}
+```{r readFile, include=FALSE}
 path <- getwd()
 pathTable1 <- paste0(path,"/datos/student-mat.csv")
 pathTable2 <- paste0(path,"/datos/student-por.csv")
@@ -33,17 +33,17 @@ d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","F
 print(nrow(d3)) # 382 students
 ```
 
+## Including table
 
+```{r, include= FALSE}
+library(knitr) 
+studentMat <- read.table(pathTable2, row.names=NULL, sep=";", header=TRUE) 
 
-
-
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```
+```{r}
+kable(head(studentMat[,1:5]))
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
