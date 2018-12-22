@@ -1,17 +1,29 @@
 ---
 title: "p1AnalisisExploratorio"
-output: html_document
+output:
+  html_document: default
 ---
+```{r , include = FALSE}
+#Borrar el espacio de trabajo  y comprobarlo. Tener un entorno limpio
+rm(list = ls())
+ls()
 
+```
+```{r, echo= FALSE}
+# Liberrias necesarias 
+library(magrittr) # necesario para cada vez qeu se utlice %>%
+library(dplyr) # alternative, this also loads %>%
+library(ggplot2)
+```
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## R Markdown
-Primera practiva voluntaria de Análisis Exploratorio R.
+Primera práctica voluntaria de Análisis Exploratorio R.
 ```{r file, include=FALSE, }
-
+# Crear un directorio donde se almacenara los datos.
 if (!file.exists("./datos")){
   dir.create("./datos")
 }
@@ -31,19 +43,121 @@ d2=read.table(pathTable2 , sep=";",header=TRUE)
 
 d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
 print(nrow(d3)) # 382 students
-```
-
-## Including table
-
-```{r, include= FALSE}
-library(knitr) 
-studentMat <- read.table(pathTable2, row.names=NULL, sep=";", header=TRUE) 
 
 ```
 ```{r}
-kable(head(studentMat[,1:5]))
+#Quedarse con las variables que nos interesan 
+d4Format <- d3[c(1, 2, 3, 6, 7, 8, 13, 31, 32, 33, 51, 52, 53)];
+```
+## Estadísticas de sexo
+En la siguiente interacción mostraremos los datos obtenidos a partir de los archivos mergeados. En los mismos,se analizará el campo "sexo", indicando de esta forma el porcentaje de chicas y chicos que cursan estas asignaturas.
+De la misma forma, se ofrece a continuación el número real de alumnos y alumnas que se encuentran matriculados en las asignaturas:
+```{r echo = FALSE}
+#Estadisticas de chicas respecto a chicos
+
+summary(d3$sex)
+nsex <- table(d3$sex)
+#plot(nsex,col = "red", lwd = 10, main = "Sexo", sub = "Estadísticas del campo sexo", xlab = "sexo", ylab = "personas")
+pie(nsex, main = "Estadisticas Sexo", radius = 1, border = 12)
+```
+
+Como observamos en esta gráfica "de pie", podemos ver que hay más chicas que chicos cursando estas asignaturas. 
+
+## Análisis de las notas
+A continuación, se muestra un análisis de las notas finales, ofreciendo el número de aprobados y suspensos de chicas respecto a chicos.
+```{r , echo =FALSE }
+
+(data2<-d4Format%>%
+ mutate(pass=ifelse(G3.x>=10,1,0), fail= ifelse(G3.x<10,1,0))%>%
+  filter(sex=="F"|sex=="M")%>%
+  group_by(sex)%>%
+  summarise(Pass=sum(pass), 
+            Fail=sum(fail)))
+
+
+```
+Para una correcta y mejor visualización:
+
+```{r, echo= FALSE}
+
+data2%>%
+  ggplot(aes(x=sex,y=Fail))+
+  geom_bar(stat="identity")
+
+
+data2%>%
+  ggplot(aes(x=sex,y=Pass))+
+  geom_bar(stat="identity")
+
 ```
 
 
+
+```{r, include = FALSE}
+# Crear un directorio donde se almacenara los ordenados por sexo y edad
+if (!file.exists("./ficheroOrder")){
+  dir.create("./ficheroOrder")
+}
+file <- paste0(path, "/ficheroOrder/orderSex.txt")
+
+
+#d4 <- d4Format[order(sex),]
+d4 <- d4Format  # cambiar
+ write.table(x = d4,file =file ,quote = TRUE, sep = ",", eol = "\n", na = "NA", dec = ".", row.names = TRUE, col.names = TRUE, qmethod = c("escape", "double"),fileEncoding = "")
+head(d4)
+ 
+```
+
+```{r, echo= FALSE}
+#Añadir columna media para ambas asisgnatura
+
+data2<- d3[c(1, 2, 3, 6, 7, 8, 13, 31, 32, 33, 51, 52, 53)];
+tam <- length(data2$school)
+nueva.col<-c(seq(1:tam))
+
+data2$media_math<-nueva.col
+data2$media_port<-nueva.col
+
+data2$media_math<-as.numeric(data2$media_math)
+data2$media_port<-as.numeric(data2$media_port)
+
+for (i in 1: nrow(data2)){
+ data2[i,]$media_math <- mean(data2[i,8],data2[i,9],data2[i,10])
+ data2[i,]$media_port <- mean(data2[i,11],data2[i,12],data2[i,13])
+}
+
+# Gaurdar en un fichero las notas y el nombre el nombre del alumno por orden
+file <- paste0(path, "/ficheroOrder/media.txt")
+write.table(x = data2,file =file ,quote = TRUE, sep = ",", eol = "\n", na = "NA", dec = ".", row.names = TRUE, col.names = TRUE, qmethod = c("escape", "double"),fileEncoding = "")
+
+
+```
+A continuación, se ofrece de forma parcial la cabecera de la tabla; para su completa visualización se exportará dicha tabla a un fichero. 
+```{r , echo= FALSE}
+head(data2)
+
+```
+
+```{r, echo = FALSE}
+# 
+data <- d4Format%>%
+  group_by(G3.x)%>%
+  aggregate(G1.x~G3.x, data=., mean)%>%
+  arrange(desc(G3.x))
+```
+## Conclusiones: 
+
+Análisis del problema:
+
+Observamos que algunas variables están ligadas unas con las otras y, que, no se muestra una visualización  significativa en la predicción de las calificaciones.  Hemos realizado diferentes interpretaciones tabulares y visuales cuyo objetivo ha sido analizar la relación entre las diferentes variables que influyen en el estudiante. Además, hemos observado que la calificación total no es sobre 10 como puede ser la estándar, sino que es sobre 20; por lo que para comprobar que un alumno está aprobado o suspenso sería el 10. 
+
+Metodología empleada:
+
+-El análisis exploratorio simple empleado sirve para formatear los datos con el fin de adquirir los predictores y resultados que hemos presentado en las tablas.
+-Se utilizan visualizaciones de las tablas con el fin de comprender el análisis realizado.
+
+Aportaciones:
+
+Fundamentándonos en el análisis por sexo, hemos podido comprobar que las alumnas tienden a fallar en el examen final(g3) en comparación con los alumnos. 
 
 
